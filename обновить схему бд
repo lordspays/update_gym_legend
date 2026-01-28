@@ -1,0 +1,13 @@
+-- Создать таблицу для хранения доступа к команде /инфа
+CREATE TABLE IF NOT EXISTS info_access (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    admin_id INTEGER NOT NULL,
+    granted_at DATETIME NOT NULL,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES players(user_id),
+    FOREIGN KEY (admin_id) REFERENCES players(user_id)
+);
+
+-- Создать индекс для быстрого поиска по дате истечения
+CREATE INDEX IF NOT EXISTS idx_info_access_expires ON info_access(expires_at);
