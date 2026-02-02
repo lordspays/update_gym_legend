@@ -1,0 +1,133 @@
+-- ======================
+-- ТАБЛИЦА АДМИН ЛОГОВ
+-- ======================
+CREATE TABLE IF NOT EXISTS admin_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    admin_name VARCHAR(100) NOT NULL,
+    admin_level VARCHAR(50) NOT NULL,
+    action_type VARCHAR(100) NOT NULL,
+    details TEXT,
+    log_type VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_admin_logs_user_id (user_id),
+    INDEX idx_admin_logs_created_at (created_at),
+    INDEX idx_admin_logs_log_type (log_type)
+);
+
+-- ======================
+-- ТАБЛИЦА АДМИН ЗАЯВОК
+-- ======================
+CREATE TABLE IF NOT EXISTS admin_requests (
+    id INT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    admin_name VARCHAR(100) NOT NULL,
+    request_type VARCHAR(50) NOT NULL,
+    target_id INT DEFAULT NULL,
+    reason TEXT NOT NULL,
+    additional_info JSON,
+    status VARCHAR(20) DEFAULT 'pending',
+    approved_by INT DEFAULT NULL,
+    approved_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (admin_id) REFERENCES players(user_id) ON DELETE CASCADE,
+    INDEX idx_admin_requests_status (status),
+    INDEX idx_admin_requests_created_at (created_at),
+    INDEX idx_admin_requests_admin_id (admin_id)
+);
+
+-- ======================
+-- ТАБЛИЦА СТАТИСТИКИ ИСПОЛЬЗОВАНИЯ КОМАНД
+-- ======================
+CREATE TABLE IF NOT EXISTS admin_usage_stats (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    stat_type VARCHAR(50) NOT NULL,
+    stat_value INT DEFAULT 0,
+    period_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_admin_stat (admin_id, stat_type, period_date),
+    INDEX idx_admin_usage_admin_id (admin_id),
+    INDEX idx_admin_usage_period (period_date)
+);
+
+-- ======================
+-- ТАБЛИЦА СТАТИСТИКИ РАССЫЛОК
+-- ======================
+CREATE TABLE IF NOT EXISTS admin_broadcast_stats (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    usage_count INT DEFAULT 0,
+    last_used TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reset_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_admin_broadcast (admin_id),
+    INDEX idx_broadcast_admin_id (admin_id)
+);
+
+-- ======================
+-- ТАБЛИЦА СТАТИСТИКИ ПРОМОКОДОВ МОДЕРАТОРОВ
+-- ======================
+CREATE TABLE IF NOT EXISTS moderator_promo_stats (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    admin_id INT NOT NULL,
+    coins_used INT DEFAULT 0,
+    magnesia_used INT DEFAULT 0,
+    power_used INT DEFAULT 0,
+    total_created INT DEFAULT 0,
+    last_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_moderator_stats (admin_id),
+    INDEX idx_promo_stats_admin_id (admin_id)
+);
+
+-- ======================
+-- СОЗДАЕМ ТАБЛИЦУ ДЛЯ ХРАНЕНИЯ ИНФОРМАЦИИ О ДОСТУПЕ К ИНФА
+-- ======================
+CREATE TABLE IF NOT EXISTS info_access (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    admin_id INT NOT NULL,
+    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (user_id) REFERENCES players(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (admin_id) REFERENCES players(user_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_info_access (user_id),
+    INDEX idx_info_access_user_id (user_id),
+    INDEX idx_info_access_expires (expires_at)
+);
+
+-- ======================
+-- СОЗДАЕМ ТАБЛИЦУ ДЛЯ ХРАНЕНИЯ ДОСТУПА К ДОНАТНОМУ БИЗНЕСУ
+-- ======================
+CREATE TABLE IF NOT EXISTS donate_business_access (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    admin_id INT NOT NULL,
+    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (user_id) REFERENCES players(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (admin_id) REFERENCES players(user_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_donate_access (user_id),
+    INDEX idx_donate_access_user_id (user_id),
+    INDEX idx_donate_access_expires (expires_at)
+);
+
+-- ======================
+-- ДОБАВЛЯЕМ ПОЛЯ В ТАБЛИЦУ players ЕСЛИ ЕЩЕ НЕТ
+-- ======================
+ALTER TABLE players 
+ADD COLUMN IF NOT EXISTS admin_level INT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS admin_since TIMESTAMP NULL DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS admin_nickname VARCHAR(50) DEFAULT NULL,
+ADD COLUMN IF NOT EXISTS bans_given INT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS permabans_given INT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS deletions_given INT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS dumbbell_sets_given INT DEFAULT 0,
+ADD COLUMN IF NOT EXISTS nickname_changes_given INT DEFAULT 0,
+ADD INDEX IF NOT EXISTS idx_players_admin_level (admin_level);
